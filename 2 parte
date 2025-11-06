@@ -1,0 +1,68 @@
+import sqlite3
+import tkinter as tk
+from tkinter import messagebox
+import hashlib
+import re
+
+def conectar_banco():
+    connection = sqlite3.connect("feriados.db")
+    cursor = connection.cursor()
+    cursor.execute("CREATE TABLE IF NOT EXISTS feriados (data TEXT)")
+    
+    # Lista de feriados confirmados nacionais
+    feriados = [
+        '2025-09-07',  # Independência do Brasil
+        '2026-12-25',  # Natal
+        # você pode adicionar mais aqui conforme municipal ou estadual…
+    ]
+    
+ 
+    for data in feriados:
+        cursor.execute("INSERT OR IGNORE INTO feriados (data) VALUES (?)", (data,))
+    connection.commit()
+    
+    
+    cursor.execute("SELECT data FROM feriados")
+    resultado = cursor.fetchall()
+    connection.close()
+    return [row[0] for row in resultado]
+def verificar_feriado(data_input):
+    feriados = conectar_banco()
+    if data_input in feriados:
+        messagebox.showinfo("Resultado", f"A data {data_input} é um feriado!")
+    else:
+        messagebox.showinfo("Resultado", f"A data {data_input} não é um feriado!")
+
+def criptografar_senha(senha):
+    return hashlib.sha256(senha.encode()).hexdigest()
+
+def validar_senha(senha):
+    if re.match(r'^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$', senha):
+        return True
+    else:
+        return False
+
+
+def criar_interface():
+    root = tk.Tk()
+    root.title("Sistema de Verificação de Feriados")
+    
+    label = tk.Label(root, text="Digite uma data (AAAA‑MM‑DD):")
+    label.pack(pady=5)
+    
+    entry = tk.Entry(root)
+    entry.pack(pady=5)
+    
+    btn_verificar = tk.Button(root, text="Verificar", 
+                              command=lambda: verificar_feriado(entry.get().strip()))
+    btn_verificar.pack(pady=5)
+    
+    btn_sair = tk.Button(root, text="Sair", command=root.quit)
+    btn_sair.pack(pady=5)
+    
+    root.mainloop()
+
+if __name__ == "__main__":
+    criar_interface()
+
+    
